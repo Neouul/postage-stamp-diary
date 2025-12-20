@@ -35,6 +35,8 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.postagestampdiary.ui.theme.OldLace
 import java.io.File
@@ -151,17 +153,91 @@ fun StampOverlay(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val width = size.width
         val height = size.height
-        val holeRadius = 20f
-        val spacing = 60f
         
-        // Draw frame border (visual only)
-        // Ideally this should match the mask applied in ViewModel
-        // For now, just a visual guide
+        // Stamp dimensions (relative to screen, same logic as before)
+        // Adjust these to change the frame size if needed
+        val framePadding = 40.dp.toPx()
+        val stampWidth = width - (framePadding * 2)
+        // Aspect ratio for stamp (e.g., 4:5 or square?)
+        // Let's keep it somewhat rectangular or match viewport
+        // For now, let's use a fixed padding from edges
+        val stampHeight = height - (framePadding * 4) // More padding top/bottom for UI
         
-        // Simple visual guide: white border with transparency
-        drawRect(
-            color = Color.White.copy(alpha = 0.3f),
-            size = size
+        val left = (width - stampWidth) / 2
+        val top = (height - stampHeight) / 2
+        val right = left + stampWidth
+        val bottom = top + stampHeight
+        
+        val holeRadius = stampWidth * 0.02f
+        val spacing = holeRadius * 3
+
+        // 1. Create Path for the Stamp Shape (Rectangle - Holes)
+        val stampPath = Path().apply {
+            addRect(androidx.compose.ui.geometry.Rect(left, top, right, bottom))
+        }
+        
+        val holesPath = Path().apply {
+            // Top & Bottom
+            val numHolesX = (stampWidth / spacing).toInt()
+            for (i in 0 until numHolesX) {
+                val cx = left + i * spacing + spacing / 2
+                addOval(androidx.compose.ui.geometry.Rect(
+                    center = Offset(cx, top),
+                    radius = holeRadius
+                ))
+                addOval(androidx.compose.ui.geometry.Rect(
+                    center = Offset(cx, bottom),
+                    radius = holeRadius
+                ))
+            }
+            
+            // Left & Right
+            val numHolesY = (stampHeight / spacing).toInt()
+            for (i in 0 until numHolesY) {
+                val cy = top + i * spacing + spacing / 2
+                addOval(androidx.compose.ui.geometry.Rect(
+                    center = Offset(left, cy),
+                    radius = holeRadius
+                ))
+                addOval(androidx.compose.ui.geometry.Rect(
+                    center = Offset(right, cy),
+                    radius = holeRadius
+                ))
+            }
+        }
+
+        // Combine to get the actual Stamp Shape (Body - Holes)
+        // Note: We need to use PathOperation.Difference
+        val finalStampShape = Path.combine(
+            androidx.compose.ui.graphics.PathOperation.Difference,
+            stampPath,
+            holesPath
+        )
+
+        // 2. Create Path for the Full Screen Overlay
+        val screenPath = Path().apply {
+            addRect(androidx.compose.ui.geometry.Rect(0f, 0f, width, height))
+        }
+
+        // 3. Create the Scrim Path (Screen - StampShape)
+        // This effectively makes the StampShape transparent, and everything else dark
+        val scrimPath = Path.combine(
+            androidx.compose.ui.graphics.PathOperation.Difference,
+            screenPath,
+            finalStampShape
+        )
+
+        // 4. Draw the Scrim
+        drawPath(
+            path = scrimPath,
+            color = Color.Black.copy(alpha = 0.7f) // Darker overlap
+        )
+        
+        // Optional: Draw a thin white border around the stamp shape for better visibility
+        drawPath(
+            path = finalStampShape,
+            color = Color.White.copy(alpha = 0.5f),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
         )
     }
 }

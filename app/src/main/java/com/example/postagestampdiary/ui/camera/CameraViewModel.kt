@@ -31,8 +31,24 @@ class CameraViewModel @Inject constructor(
     }
 
     private fun applyStampMask(source: Bitmap): Bitmap {
-        val width = source.width
-        val height = source.height
+        // Optimization: Ensure bitmap is not too huge before processing
+        val maxDimension = 1080
+        val scale = if (source.width > maxDimension || source.height > maxDimension) {
+            min(maxDimension.toFloat() / source.width, maxDimension.toFloat() / source.height)
+        } else {
+            1f
+        }
+        
+        val width = (source.width * scale).toInt()
+        val height = (source.height * scale).toInt()
+        
+        // Re-scale source if needed
+        val scaledSource = if (scale != 1f) {
+            Bitmap.createScaledBitmap(source, width, height, true)
+        } else {
+            source
+        }
+
         val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(output)
         
@@ -53,15 +69,10 @@ class CameraViewModel @Inject constructor(
             isAntiAlias = true
         }
 
-        canvas.drawPath(path, paint)
+        // Draw source content first
+        canvas.drawBitmap(scaledSource, 0f, 0f, null)
         
-        // Improve masking logic later: currently just drawing source on top for simplicity,
-        // but real stamp effect needs punch holes.
-        // Simplified Logic: 
-        // 1. Draw source
-        canvas.drawBitmap(source, 0f, 0f, null)
-        
-        // 2. Erase holes
+        // Erase holes
         // Top & Bottom
         for (i in 0 until (width / spacing).toInt()) {
             val cx = i * spacing + spacing / 2

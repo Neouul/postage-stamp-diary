@@ -27,16 +27,16 @@ class StampRepository @Inject constructor(
         return stampDao.getStampById(id)
     }
 
+
     suspend fun saveStamp(bitmap: Bitmap, memo: String?): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                // Resize and Compress Logic
-                val filename = "stamp_${UUID.randomUUID()}.jpg"
+                // Use PNG as requested by user
+                val filename = "stamp_${UUID.randomUUID()}.png"
                 val file = File(context.filesDir, filename)
                 
-                // Saving optimization: Compress to JPEG with 80% quality
                 FileOutputStream(file).use { out ->
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
                 }
 
                 val stamp = StampEntity(
