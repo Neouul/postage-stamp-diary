@@ -22,6 +22,7 @@ import androidx.navigation.navArgument
 import com.example.postagestampdiary.ui.album.AlbumScreen
 import com.example.postagestampdiary.ui.camera.CameraScreen
 import com.example.postagestampdiary.ui.detail.DetailScreen
+import com.example.postagestampdiary.ui.settings.SettingsScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -35,11 +36,19 @@ class MainActivity : ComponentActivity() {
                     composable("home") {
                         AlbumScreen(
                             onNavigateToCamera = { navController.navigate("camera") },
-                            onNavigateToDetail = { id -> navController.navigate("detail/$id") }
+                            onNavigateToDetail = { id -> navController.navigate("detail/$id") },
+                            onNavigateToSettings = { navController.navigate("settings") }
                         )
                     }
                     composable("camera") {
                         CameraScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                            onCaptureSuccess = { navController.popBackStack() },
+                            onNavigateToSettings = { navController.navigate("settings") }
+                        )
+                    }
+                    composable("settings") {
+                        SettingsScreen(
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
@@ -48,7 +57,10 @@ class MainActivity : ComponentActivity() {
                         arguments = listOf(navArgument("stampId") { type = NavType.LongType })
                     ) { backStackEntry ->
                         val stampId = backStackEntry.arguments?.getLong("stampId") ?: -1L
-                        DetailScreen(stampId = stampId)
+                        DetailScreen(
+                            stampId = stampId,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
                     }
                 }
             }

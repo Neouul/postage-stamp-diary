@@ -19,10 +19,11 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): StampDatabase {
         return Room.databaseBuilder(
-            context,
+            context.applicationContext,
             StampDatabase::class.java,
             "stamp_database"
-        ).build()
+        ).fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides

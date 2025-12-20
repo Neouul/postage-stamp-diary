@@ -21,11 +21,15 @@ class CameraViewModel @Inject constructor(
     private val repository: StampRepository
 ) : ViewModel() {
 
-    fun saveStamp(bitmap: Bitmap, onComplete: () -> Unit) {
+    fun saveStamp(
+        bitmap: Bitmap, 
+        location: String = "Travel", 
+        category: String = "Daily",
+        onComplete: () -> Unit
+    ) {
         viewModelScope.launch {
-            // Apply Stamp Mask before saving
-            val maskedBitmap = applyStampMask(bitmap)
-            repository.saveStamp(maskedBitmap, null)
+            // Save clean bitmap. UI will handle the stamp perforation effect.
+            repository.saveStamp(bitmap, null, location, category)
             onComplete()
         }
     }

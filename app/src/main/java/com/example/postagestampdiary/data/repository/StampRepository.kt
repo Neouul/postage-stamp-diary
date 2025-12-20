@@ -23,12 +23,27 @@ class StampRepository @Inject constructor(
 
     val allStamps: Flow<List<StampEntity>> = stampDao.getAllStamps()
 
+    fun getStampByIdFlow(id: Long): Flow<StampEntity?> {
+        return stampDao.getStampByIdFlow(id)
+    }
+
     suspend fun getStampById(id: Long): StampEntity? {
         return stampDao.getStampById(id)
     }
 
+    suspend fun updateStamp(stamp: StampEntity) {
+        withContext(Dispatchers.IO) {
+            stampDao.insertStamp(stamp)
+        }
+    }
 
-    suspend fun saveStamp(bitmap: Bitmap, memo: String?): Result<Unit> {
+
+    suspend fun saveStamp(
+        bitmap: Bitmap, 
+        memo: String?,
+        location: String = "Unknown",
+        category: String = "Daily"
+    ): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
                 // Use PNG as requested by user
@@ -41,7 +56,9 @@ class StampRepository @Inject constructor(
 
                 val stamp = StampEntity(
                     imagePath = file.absolutePath,
-                    memo = memo
+                    memo = memo,
+                    location = location,
+                    category = category
                 )
                 stampDao.insertStamp(stamp)
                 Result.success(Unit)

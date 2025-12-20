@@ -10,5 +10,7 @@ data class StampEntity(
     val imagePath: String,
     val frameType: String = "default",
     val memo: String? = null,
+    val location: String = "Unknown",
+    val category: String = "Daily",
     val createdAt: Long = System.currentTimeMillis()
 )

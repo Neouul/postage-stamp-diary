@@ -13,6 +13,9 @@ interface StampDao {
     fun getAllStamps(): Flow<List<StampEntity>>
 
     @Query("SELECT * FROM stamps WHERE id = :id")
+    fun getStampByIdFlow(id: Long): Flow<StampEntity?>
+
+    @Query("SELECT * FROM stamps WHERE id = :id")
     suspend fun getStampById(id: Long): StampEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
