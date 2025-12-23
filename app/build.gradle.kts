@@ -7,13 +7,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.postagestampdiary"
+    namespace = "com.neouul.postagestampdiary"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.postagestampdiary"
+        applicationId = "com.neouul.postagestampdiary"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
