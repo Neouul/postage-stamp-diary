@@ -37,6 +37,9 @@ fun AlbumScreen(
     val stamps by viewModel.stamps.collectAsState()
     var activeCategory by remember { mutableStateOf("All") }
     var showFilterMenu by remember { mutableStateOf(false) }
+    var visibleMenuStampId by remember { mutableStateOf<Long?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var stampToDelete by remember { mutableStateOf<com.neouul.postagestampdiary.data.local.StampEntity?>(null) }
     
     val filteredStamps = if (activeCategory == "All") {
         stamps
@@ -164,11 +167,62 @@ fun AlbumScreen(
                 .padding(paddingValues)
         ) {
             items(filteredStamps) { stamp ->
-                StampCard(
-                    stamp = stamp,
-                    onClick = { onNavigateToDetail(stamp.id) }
-                )
+                Box {
+                    StampCard(
+                        stamp = stamp,
+                        onClick = { onNavigateToDetail(stamp.id) },
+                        onLongClick = { visibleMenuStampId = stamp.id }
+                    )
+                    
+                    DropdownMenu(
+                        expanded = visibleMenuStampId == stamp.id,
+                        onDismissRequest = { visibleMenuStampId = null }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Delete", color = Color.Red) },
+                            onClick = {
+                                visibleMenuStampId = null
+                                stampToDelete = stamp
+                                showDeleteDialog = true
+                            }
+                        )
+                    }
+                }
             }
+        }
+
+        if (showDeleteDialog && stampToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { 
+                    showDeleteDialog = false 
+                    stampToDelete = null
+                },
+                title = { Text("Delete Stamp") },
+                text = { Text("Are you sure you want to delete this stamp?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            stampToDelete?.let { 
+                                viewModel.deleteStamp(it)
+                            }
+                            showDeleteDialog = false
+                            stampToDelete = null
+                        }
+                    ) {
+                        Text("Delete", color = Color.Red)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { 
+                            showDeleteDialog = false 
+                            stampToDelete = null
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
