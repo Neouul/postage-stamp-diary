@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -44,6 +45,13 @@ class DetailViewModel @Inject constructor(
             repository.updateStamp(stamp.copy(memo = memo))
         }
     }
+
+    fun deleteStamp(stamp: StampEntity, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            repository.deleteStamp(stamp)
+            onComplete()
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,6 +64,7 @@ fun DetailScreen(
     val stamp by viewModel.getStamp(stampId).collectAsState(initial = null)
     var isFlipped by remember { mutableStateOf(false) }
     var memoText by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     LaunchedEffect(stamp) {
         stamp?.memo?.let { memoText = it }
@@ -77,6 +86,9 @@ fun DetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    }
                     IconButton(onClick = { /* Share */ }) {
                         Icon(Icons.Default.Share, contentDescription = "Share")
                     }
@@ -125,7 +137,7 @@ fun DetailScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clip(StampShape())
+                                .clip(StampShape(currentStamp.frameType))
                                 .background(Color.White)
                         ) {
                             AsyncImage(
@@ -161,7 +173,7 @@ fun DetailScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .graphicsLayer { rotationY = 180f }
-                                .clip(StampShape())
+                                .clip(StampShape(currentStamp.frameType))
                                 .background(Color.White)
                                 .padding(24.dp)
                         ) {
@@ -199,6 +211,33 @@ fun DetailScreen(
                 )
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Stamp") },
+            text = { Text("Are you sure you want to delete this stamp?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        stamp?.let { 
+                            viewModel.deleteStamp(it) {
+                                onNavigateBack()
+                            }
+                        }
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
