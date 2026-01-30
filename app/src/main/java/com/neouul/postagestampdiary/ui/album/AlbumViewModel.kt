@@ -8,11 +8,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AlbumViewModel @Inject constructor(
-    repository: StampRepository
+    private val repository: StampRepository
 ) : ViewModel() {
     val stamps: StateFlow<List<StampEntity>> = repository.allStamps
         .stateIn(
@@ -20,4 +21,10 @@ class AlbumViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun deleteStamp(stamp: StampEntity) {
+        viewModelScope.launch {
+            repository.deleteStamp(stamp)
+        }
+    }
 }
