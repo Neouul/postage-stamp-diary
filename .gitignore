@@ -19,6 +19,7 @@ local.properties
 
 design/
 temp_work/
+img/
 
 **/build/
 *.apk
